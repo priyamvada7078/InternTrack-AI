@@ -176,4 +176,3 @@ The analytics system will become more advanced once more real user data is avail
 
 
 ```text
-Frontend/src/hooks/useGlobalSearch.js
