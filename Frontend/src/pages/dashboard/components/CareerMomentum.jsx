@@ -1,32 +1,32 @@
 import { Sparkles, TrendingUp, CheckCircle2, Award, Briefcase, MessageSquareText } from "lucide-react";
 import { CAREER_MOMENTUM } from "../data/dashboardData";
 
-export default function CareerMomentum() {
-  const { score, maxScore, statusText, aiExplanation, metrics, weeklyGrowth } =
-    CAREER_MOMENTUM;
+export default function CareerMomentum({ data }) {
+  const momentum = data || CAREER_MOMENTUM;
+  const { score, maxScore = 100, statusText, aiExplanation, metrics, weeklyGrowth } = momentum;
 
   const metricCards = [
     {
       label: "Applications",
-      value: metrics.applications,
+      value: metrics?.applications ?? 0,
       icon: Briefcase,
       color: "text-indigo-600 bg-indigo-50 border-indigo-100 dark:text-indigo-400 dark:bg-indigo-950/80 dark:border-indigo-900/60",
     },
     {
       label: "Response Rate",
-      value: metrics.responseRate,
+      value: metrics?.responseRate ?? "0%",
       icon: MessageSquareText,
       color: "text-teal-600 bg-teal-50 border-teal-100 dark:text-teal-400 dark:bg-teal-950/80 dark:border-teal-900/60",
     },
     {
       label: "Interviews",
-      value: metrics.interviews,
+      value: metrics?.interviews ?? 0,
       icon: CheckCircle2,
       color: "text-purple-600 bg-purple-50 border-purple-100 dark:text-purple-400 dark:bg-purple-950/80 dark:border-purple-900/60",
     },
     {
       label: "Offers",
-      value: metrics.offers,
+      value: metrics?.offers ?? 0,
       icon: Award,
       color: "text-emerald-600 bg-emerald-50 border-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/80 dark:border-emerald-900/60",
     },
@@ -70,7 +70,7 @@ export default function CareerMomentum() {
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800 p-0.5">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-teal-400 to-emerald-400 transition-all duration-1000 ease-out"
-                style={{ width: `${(score / maxScore) * 100}%` }}
+                style={{ width: `${Math.min(100, Math.max(5, (score / maxScore) * 100))}%` }}
               />
             </div>
           </div>

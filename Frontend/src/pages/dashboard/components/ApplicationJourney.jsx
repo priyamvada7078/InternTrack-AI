@@ -2,9 +2,11 @@ import { ArrowRight, ChevronRight, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { APPLICATION_JOURNEY, STATUS_STYLES } from "../data/dashboardData";
 
-export default function ApplicationJourney() {
+export default function ApplicationJourney({ data }) {
   const navigate = useNavigate();
-  const { stages, recentMovement } = APPLICATION_JOURNEY;
+  const journey = data || APPLICATION_JOURNEY;
+  const stages = journey.stages || APPLICATION_JOURNEY.stages;
+  const recentMovement = journey.recentMovement || APPLICATION_JOURNEY.recentMovement;
 
   return (
     <section className="space-y-4">
@@ -79,44 +81,50 @@ export default function ApplicationJourney() {
           </h3>
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-            {recentMovement.map((item) => {
-              const statusBadgeStyle =
-                STATUS_STYLES[item.status] || "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+            {recentMovement.length > 0 ? (
+              recentMovement.map((item) => {
+                const statusBadgeStyle =
+                  STATUS_STYLES[item.status] || "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
 
-              return (
-                <div
-                  key={item.id}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40 rounded-lg px-2"
-                >
-                  {/* Left: Company Logo Initial + Info */}
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl font-bold text-white shadow-2xs ${item.bgTint}`}
-                    >
-                      {item.initial}
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40 rounded-lg px-2"
+                  >
+                    {/* Left: Company Logo Initial + Info */}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-xl font-bold text-white shadow-2xs ${item.bgTint || "bg-indigo-600"}`}
+                      >
+                        {item.initial || "C"}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {item.company}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{item.role}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
-                        {item.company}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{item.role}</p>
+
+                    {/* Right: Status Tag + Time Ago */}
+                    <div className="flex items-center gap-3 ml-auto sm:ml-0">
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 ${statusBadgeStyle}`}
+                      >
+                        {item.status}
+                      </span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500 min-w-[70px] text-right">
+                        {item.dateAgo}
+                      </span>
                     </div>
                   </div>
-
-                  {/* Right: Status Tag + Time Ago */}
-                  <div className="flex items-center gap-3 ml-auto sm:ml-0">
-                    <span
-                      className={`rounded-full border px-2.5 py-0.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 ${statusBadgeStyle}`}
-                    >
-                      {item.status}
-                    </span>
-                    <span className="text-xs text-slate-400 dark:text-slate-500 min-w-[70px] text-right">
-                      {item.dateAgo}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <p className="text-xs text-slate-400 dark:text-slate-500 py-3 text-center">
+                No recent application movements.
+              </p>
+            )}
           </div>
         </div>
       </div>

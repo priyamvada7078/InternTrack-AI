@@ -8,10 +8,15 @@ const internshipSchema = new mongoose.Schema(
             trim: true,
         },
 
+        // Support string company name or Organization ObjectId for flexibility
         company: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Organization",
+            type: mongoose.Schema.Types.Mixed,
             required: true,
+        },
+
+        role: {
+            type: String,
+            trim: true,
         },
 
         location: {
@@ -32,13 +37,23 @@ const internshipSchema = new mongoose.Schema(
         },
 
         stipend: {
-            type: Number,
-            default: 0,
+            type: String,
+            default: "0",
+        },
+
+        appliedDate: {
+            type: Date,
+            default: Date.now,
         },
 
         applicationLink: {
             type: String,
-            required: true,
+            default: "",
+        },
+
+        notes: {
+            type: String,
+            default: "",
         },
 
         status: {

@@ -1,7 +1,23 @@
-import { Clock } from "lucide-react";
+import { Clock, Send, CheckCircle2, FileEdit, Building2, Sparkles } from "lucide-react";
 import { ACTIVITY } from "../data/dashboardData";
 
-export default function ActivityTimeline() {
+export default function ActivityTimeline({ activities }) {
+  const activityList = activities && activities.length > 0 ? activities : ACTIVITY;
+
+  const getIconForStatus = (status) => {
+    switch (status) {
+      case "Offer":
+        return Building2;
+      case "Interview":
+        return CheckCircle2;
+      case "OA":
+        return Sparkles;
+      case "Applied":
+      default:
+        return Send;
+    }
+  };
+
   return (
     <section className="space-y-4">
       {/* Section Header */}
@@ -15,12 +31,12 @@ export default function ActivityTimeline() {
       {/* Main Timeline Card */}
       <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 sm:p-6">
         <div className="flex flex-col">
-          {ACTIVITY.map((item, index) => {
-            const Icon = item.icon;
-            const isLast = index === ACTIVITY.length - 1;
+          {activityList.map((item, index) => {
+            const Icon = item.icon || getIconForStatus(item.status);
+            const isLast = index === activityList.length - 1;
 
             return (
-              <div key={item.id || item.text} className="flex gap-4">
+              <div key={item.id || item.text || index} className="flex gap-4">
                 {/* Timeline Icon Node + Connecting Line */}
                 <div className="flex flex-col items-center">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ring-4 ring-white dark:ring-slate-900 border border-slate-200/60 dark:border-slate-700">

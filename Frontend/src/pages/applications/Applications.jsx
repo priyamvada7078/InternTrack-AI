@@ -20,8 +20,8 @@ import internshipService from "../../services/internshipService";
 const ITEMS_PER_PAGE = 6;
 
 const Applications = () => {
-  const [applications, setApplications] = useState(applicationsDataSeed);
-  const [loading, setLoading] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Search / Filter / Sort state
@@ -37,21 +37,25 @@ const Applications = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
-  // Fetch applications from backend API (with graceful fallback to seed data)
+  // Fetch applications from backend API
   const fetchApplications = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await internshipService.getAllInternships(1, searchQuery, statusFilter === "All" ? "" : statusFilter);
-      if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+      const response = await internshipService.getAllInternships(1, searchQuery, statusFilter, modeFilter);
+      if (response?.data && Array.isArray(response.data)) {
         setApplications(response.data);
+      } else {
+        setApplications([]);
       }
     } catch (err) {
-      console.warn("Applications API notice: using local data", err?.message);
+      console.warn("Applications API fallback notice:", err?.message);
+      // If user has no internships yet and API fails, provide graceful empty array or seed if preferred
+      setApplications(applicationsDataSeed);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, modeFilter]);
 
   useEffect(() => {
     fetchApplications();
@@ -64,7 +68,7 @@ const Applications = () => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((app) => {
-        const companyName = typeof app.company === "object" ? app.company.name || "" : app.company || "";
+        const companyName = typeof app.company === "object" ? app.company?.name || "" : app.company || "";
         const roleName = app.role || app.title || "";
         const locationName = app.location || "";
         return (
@@ -84,8 +88,8 @@ const Applications = () => {
     }
 
     result.sort((a, b) => {
-      const companyA = typeof a.company === "object" ? a.company.name || "" : a.company || "";
-      const companyB = typeof b.company === "object" ? b.company.name || "" : b.company || "";
+      const companyA = typeof a.company === "object" ? a.company?.name || "" : a.company || "";
+      const companyB = typeof b.company === "object" ? b.company?.name || "" : b.company || "";
       const dateA = new Date(a.appliedDate || a.createdAt || 0);
       const dateB = new Date(b.appliedDate || b.createdAt || 0);
 
@@ -127,7 +131,19 @@ const Applications = () => {
   // --- CRUD API Handlers ---
   const handleAddApplication = async (newApplication) => {
     try {
-      const created = await internshipService.createInternship(newApplication);
+      const payload = {
+        title: newApplication.role || newApplication.title,
+        role: newApplication.role || newApplication.title,
+        company: newApplication.company,
+        location: newApplication.location,
+        mode: newApplication.mode,
+        stipend: newApplication.stipend,
+        appliedDate: newApplication.appliedDate,
+        status: newApplication.status,
+        notes: newApplication.notes,
+        applicationLink: newApplication.applicationLink || "https://example.com",
+      };
+      const created = await internshipService.createInternship(payload);
       if (created?.data) {
         setApplications((prev) => [created.data, ...prev]);
       } else {
@@ -141,9 +157,26 @@ const Applications = () => {
   const handleUpdateApplication = async (updatedApplication) => {
     const id = updatedApplication.id || updatedApplication._id;
     try {
-      await internshipService.updateInternship(id, updatedApplication);
-    } catch {
-      // Fallback local state update
+      const payload = {
+        title: updatedApplication.role || updatedApplication.title,
+        role: updatedApplication.role || updatedApplication.title,
+        company: typeof updatedApplication.company === "object" ? updatedApplication.company?.name : updatedApplication.company,
+        location: updatedApplication.location,
+        mode: updatedApplication.mode,
+        stipend: updatedApplication.stipend,
+        appliedDate: updatedApplication.appliedDate,
+        status: updatedApplication.status,
+        notes: updatedApplication.notes,
+      };
+      const result = await internshipService.updateInternship(id, payload);
+      if (result?.data) {
+        setApplications((prev) =>
+          prev.map((app) => ((app.id || app._id) === id ? result.data : app))
+        );
+        return;
+      }
+    } catch (err) {
+      console.warn("Update application error:", err);
     }
     setApplications((prev) =>
       prev.map((app) => ((app.id || app._id) === id ? updatedApplication : app))
@@ -153,8 +186,8 @@ const Applications = () => {
   const handleDeleteApplication = async (id) => {
     try {
       await internshipService.deleteInternship(id);
-    } catch {
-      // Fallback local state update
+    } catch (err) {
+      console.warn("Delete application error:", err);
     }
     setApplications((prev) => prev.filter((app) => (app.id || app._id) !== id));
   };

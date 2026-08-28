@@ -7,23 +7,20 @@ const {
   updateInternship,
   deleteInternship,
   getDashboardStats,
+  getAnalytics,
 } = require("../controllers/internship.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-// Public Routes
-router.get("/", getAllInternships);
-
 router.get("/stats/dashboard", authMiddleware, getDashboardStats);
+router.get("/stats/analytics", authMiddleware, getAnalytics);
 
-router.get("/:id", getInternshipById);
-
+router.get("/", authMiddleware, getAllInternships);
+router.get("/:id", authMiddleware, getInternshipById);
 router.post("/", authMiddleware, createInternship);
-
 router.put("/:id", authMiddleware, updateInternship);
-
 router.delete("/:id", authMiddleware, deleteInternship);
 
 module.exports = router;

@@ -8,7 +8,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 export default function Dashboard() {
-  const { loading, error, refetch } = useDashboard();
+  const { loading, error, refetch, momentumData, journeyData, activityList } = useDashboard();
 
   if (loading) {
     return <LoadingSpinner label="Loading career dashboard..." />;
@@ -41,10 +41,10 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-[1400px] space-y-8 pb-10">
       <DashboardHeader />
-      <CareerMomentum />
+      <CareerMomentum data={momentumData} />
       <NextMoves />
-      <ApplicationJourney />
-      <ActivityTimeline />
+      <ApplicationJourney data={journeyData} />
+      <ActivityTimeline activities={activityList} />
     </div>
   );
 }

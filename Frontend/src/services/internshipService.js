@@ -14,6 +14,19 @@ const internshipService = {
     }
   },
 
+  getAnalytics: async () => {
+    try {
+      const response = await api.get("/internships/stats/analytics");
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data || {
+          message: "Failed to load analytics data.",
+        }
+      );
+    }
+  },
+
   getRecentInternships: async () => {
     try {
       const response = await api.get("/internships?limit=5");
@@ -27,14 +40,15 @@ const internshipService = {
     }
   },
 
-  getAllInternships: async (page = 1, search = "", status = "") => {
+  getAllInternships: async (page = 1, search = "", status = "", mode = "") => {
     try {
       const response = await api.get("/internships", {
         params: {
           page,
-          limit: 10,
+          limit: 50,
           search,
-          status,
+          status: status === "All" ? "" : status,
+          mode: mode === "All" ? "" : mode,
         },
       });
       return response.data;

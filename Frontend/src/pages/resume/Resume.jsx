@@ -11,15 +11,12 @@ import {
   Download,
   Info,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Resume() {
+  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileDetails, setFileDetails] = useState({
-    name: "Aarav_Sharma_Backend_Resume_2026.pdf",
-    size: "2.4 MB",
-    uploadedAt: "2 days ago",
-    score: 88,
-  });
+  const [fileDetails, setFileDetails] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef(null);
@@ -104,11 +101,11 @@ export default function Resume() {
           </p>
         </div>
 
-        {/* Data Origin Clarification Banner */}
-        <div className="inline-flex items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/80 px-3.5 py-2 text-xs font-semibold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-300">
-          <Info className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        {/* User Active Workspace Badge */}
+        <div className="inline-flex items-center gap-2 rounded-xl border border-indigo-200/80 bg-indigo-50/80 px-3.5 py-2 text-xs font-semibold text-indigo-800 dark:border-indigo-900/60 dark:bg-indigo-950/60 dark:text-indigo-300">
+          <Sparkles className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
           <span>
-            <strong>Note:</strong> File upload is active in <strong>Frontend Client State</strong>. AI analysis score is currently <strong>Demo Data</strong>.
+            Workspace: <strong>{user?.name || "Authenticated Candidate"}</strong>
           </span>
         </div>
       </div>
@@ -213,7 +210,7 @@ export default function Resume() {
                   </button>
                 </div>
 
-                {/* Simulated AI ATS Match Score */}
+                {/* AI ATS Match Score */}
                 <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-slate-50 to-teal-50/70 p-4 dark:border-indigo-900/60 dark:from-indigo-950/30 dark:via-slate-900 dark:to-teal-950/30 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -234,7 +231,7 @@ export default function Resume() {
               </div>
             ) : (
               <div className="py-10 text-center text-slate-400 dark:text-slate-500">
-                No active resume selected. Select a file from your computer to activate.
+                No active resume uploaded yet. Select a file from your laptop above to activate AI parsing.
               </div>
             )}
           </div>
