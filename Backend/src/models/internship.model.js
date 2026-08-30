@@ -32,7 +32,7 @@ const internshipSchema = new mongoose.Schema(
 
         mode: {
             type: String,
-            enum: ["Remote", "Hybrid", "Onsite"],
+            enum: ["Remote", "Hybrid", "On-site"],
             default: "Remote",
         },
 

@@ -42,11 +42,17 @@ const createInternship = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
+    console.error("=================================");
+    console.error("CREATE INTERNSHIP ERROR");
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
+    console.error("=================================");
+
+    return res.status(500).json({
+        success: false,
+        message: error.message,
+    });
+}
 };
 
 // Get All Internships (filtered by current user)
