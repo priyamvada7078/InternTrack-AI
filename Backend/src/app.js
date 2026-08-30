@@ -7,7 +7,7 @@ const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
 const adminRoutes = require("./routes/admin.routes");
 const errorHandler = require("./middleware/error.middleware");
-
+const healthRoutes = require("./routes/health.routes");
 const app = express();
 
 // Enable CORS
@@ -26,6 +26,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/internships", internshipRoutes);
+app.use("/api/health", healthRoutes);
 
 // 404 Middleware
 app.use((req, res) => {
