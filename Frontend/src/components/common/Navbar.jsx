@@ -47,7 +47,6 @@ export default function Navbar({ onMenuClick }) {
 
   const initials = getInitials(user?.name);
   const displayName = user?.name || "User";
-  const firstName = user?.name?.trim().split(" ")[0] || "User";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);

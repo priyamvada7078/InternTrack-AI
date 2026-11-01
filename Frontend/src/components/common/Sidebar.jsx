@@ -9,7 +9,10 @@ import {
   LogOut,
   ChevronLeft,
   Radar,
+  MessageSquareText,
+  History,
 } from "lucide-react";
+
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -17,6 +20,8 @@ const NAV_ITEMS = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/applications", icon: Briefcase, label: "Applications" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/interview-preparation", icon: MessageSquareText, label: "Interview Prep" },
+  { to: "/interview-history", icon: History, label: "Prep History" },
   { to: "/profile", icon: User, label: "Profile" },
   { to: "/resume", icon: FileText, label: "Resume" },
 ];
@@ -37,9 +42,7 @@ function NavItem({ item, collapsed, onClick }) {
       <item.icon className="h-5 w-5 shrink-0" />
 
       {!collapsed && (
-        <span className="text-sm truncate">
-          {item.label}
-        </span>
+        <span className="text-sm truncate">{item.label}</span>
       )}
     </NavLink>
   );
@@ -66,34 +69,22 @@ export default function Sidebar({
 
       <aside
         className={`
-        fixed
-        top-[72px]
-        left-0
-        z-50
-        h-[calc(100vh-72px)]
-        bg-white
-        dark:bg-slate-900
-        border-r
-        border-slate-200/80
-        dark:border-slate-800
-        shadow-2xs
-        transition-all
-        duration-300
-        flex
-        flex-col
-        justify-between
-
-        ${collapsed ? "w-20" : "w-[260px]"}
-
-        ${
-          mobileOpen
-            ? "translate-x-0"
-            : "-translate-x-full md:translate-x-0"
-        }
-      `}
+          fixed top-[72px] left-0 z-50
+          h-[calc(100vh-72px)]
+          bg-white dark:bg-slate-900
+          border-r border-slate-200/80 dark:border-slate-800
+          shadow-2xs transition-all duration-300
+          flex flex-col justify-between
+          ${collapsed ? "w-20" : "w-[260px]"}
+          ${
+            mobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full md:translate-x-0"
+          }
+        `}
       >
         <div>
-          {/* Top Brand Section inside Sidebar */}
+          {/* Brand Section */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-teal-500 shadow-2xs">

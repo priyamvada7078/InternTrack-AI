@@ -1,5 +1,7 @@
+
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, Briefcase, RefreshCw } from "lucide-react";
+import { Plus, Briefcase } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // Components
 import SearchBar from "./components/SearchBar";
@@ -14,15 +16,18 @@ import DeleteApplicationModal from "./components/DeleteApplicationModal";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 // Data & Service
-import applicationsDataSeed from "./data/applicationsData";
+
 import internshipService from "../../services/internshipService";
 
 const ITEMS_PER_PAGE = 6;
 
 const Applications = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error , setError] = useState(null);
 
   // Search / Filter / Sort state
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,18 +46,26 @@ const Applications = () => {
   const fetchApplications = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await internshipService.getAllInternships(1, searchQuery, statusFilter, modeFilter);
+      const response = await internshipService.getAllInternships(
+        1,
+        searchQuery,
+        statusFilter,
+        modeFilter
+      );
+
       if (response?.data && Array.isArray(response.data)) {
         setApplications(response.data);
       } else {
         setApplications([]);
       }
-    } catch (err) {
-      console.warn("Applications API fallback notice:", err?.message);
-      // If user has no internships yet and API fails, provide graceful empty array or seed if preferred
-      setApplications(applicationsDataSeed);
-    } finally {
+      } catch (err) {
+        console.warn("Applications fetch error:", err?.message);
+        setError(err);
+        // Clear applications on error to avoid showing stale or demo data
+        setApplications([]);
+      } finally {
       setLoading(false);
     }
   }, [searchQuery, statusFilter, modeFilter]);
@@ -61,16 +74,52 @@ const Applications = () => {
     fetchApplications();
   }, [fetchApplications]);
 
+  // Open application selected through Dashboard's Next Best Action
+  useEffect(() => {
+    const targetId = location.state?.openApplicationId;
+
+    if (!targetId || loading) return;
+
+    // Only search actual API records, not fallback/demo records
+    const targetApplication = applications.find(
+      (app) =>
+        String(app._id || app.id) === String(targetId)
+    );
+
+    if (targetApplication) {
+      setSelectedApplication(targetApplication);
+      setIsEditModalOpen(true);
+    }
+
+    // Clear navigation state to prevent reopening on refresh
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [
+    location.state,
+    location.pathname,
+    loading,
+    applications,
+    navigate,
+  ]);
+
   // Derived, filtered + sorted + searched list
   const filteredApplications = useMemo(() => {
     let result = [...applications];
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
+
       result = result.filter((app) => {
-        const companyName = typeof app.company === "object" ? app.company?.name || "" : app.company || "";
+        const companyName =
+          typeof app.company === "object"
+            ? app.company?.name || ""
+            : app.company || "";
+
         const roleName = app.role || app.title || "";
         const locationName = app.location || "";
+
         return (
           companyName.toLowerCase().includes(query) ||
           roleName.toLowerCase().includes(query) ||
@@ -80,37 +129,68 @@ const Applications = () => {
     }
 
     if (statusFilter !== "All") {
-      result = result.filter((app) => app.status === statusFilter);
+      result = result.filter(
+        (app) => app.status === statusFilter
+      );
     }
 
     if (modeFilter !== "All") {
-      result = result.filter((app) => app.mode === modeFilter);
+      result = result.filter(
+        (app) => app.mode === modeFilter
+      );
     }
 
     result.sort((a, b) => {
-      const companyA = typeof a.company === "object" ? a.company?.name || "" : a.company || "";
-      const companyB = typeof b.company === "object" ? b.company?.name || "" : b.company || "";
-      const dateA = new Date(a.appliedDate || a.createdAt || 0);
-      const dateB = new Date(b.appliedDate || b.createdAt || 0);
+      const companyA =
+        typeof a.company === "object"
+          ? a.company?.name || ""
+          : a.company || "";
+
+      const companyB =
+        typeof b.company === "object"
+          ? b.company?.name || ""
+          : b.company || "";
+
+      const dateA = new Date(
+        a.appliedDate || a.createdAt || 0
+      );
+
+      const dateB = new Date(
+        b.appliedDate || b.createdAt || 0
+      );
 
       switch (sortBy) {
         case "dateAsc":
           return dateA - dateB;
+
         case "dateDesc":
           return dateB - dateA;
+
         case "companyAsc":
           return companyA.localeCompare(companyB);
+
         case "companyDesc":
           return companyB.localeCompare(companyA);
+
         default:
           return 0;
       }
     });
 
     return result;
-  }, [applications, searchQuery, statusFilter, modeFilter, sortBy]);
+  }, [
+    applications,
+    searchQuery,
+    statusFilter,
+    modeFilter,
+    sortBy,
+  ]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredApplications.length / ITEMS_PER_PAGE)
+  );
+
   const paginatedApplications = filteredApplications.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -125,10 +205,9 @@ const Applications = () => {
     setSearchQuery("");
     setStatusFilter("All");
     setModeFilter("All");
-    setCurrentPage(1);
   };
 
-  // --- CRUD API Handlers ---
+  // CRUD API Handlers
   const handleAddApplication = async (newApplication) => {
     try {
       const payload = {
@@ -141,26 +220,35 @@ const Applications = () => {
         appliedDate: newApplication.appliedDate,
         status: newApplication.status,
         notes: newApplication.notes,
-        applicationLink: newApplication.applicationLink || "https://example.com",
+        applicationLink:
+          newApplication.applicationLink || "https://example.com",
       };
+
       const created = await internshipService.createInternship(payload);
+
       if (created?.data) {
         setApplications((prev) => [created.data, ...prev]);
       } else {
-        setApplications((prev) => [newApplication, ...prev]);
+        console.warn("Create internship response missing data");
+        setError(new Error("Failed to create internship"));
       }
-    } catch {
-      setApplications((prev) => [newApplication, ...prev]);
+    } catch (err) {
+      console.warn("Create internship error:", err);
+      setError(err);
     }
   };
 
   const handleUpdateApplication = async (updatedApplication) => {
     const id = updatedApplication.id || updatedApplication._id;
+
     try {
       const payload = {
         title: updatedApplication.role || updatedApplication.title,
         role: updatedApplication.role || updatedApplication.title,
-        company: typeof updatedApplication.company === "object" ? updatedApplication.company?.name : updatedApplication.company,
+        company:
+          typeof updatedApplication.company === "object"
+            ? updatedApplication.company?.name
+            : updatedApplication.company,
         location: updatedApplication.location,
         mode: updatedApplication.mode,
         stipend: updatedApplication.stipend,
@@ -168,18 +256,33 @@ const Applications = () => {
         status: updatedApplication.status,
         notes: updatedApplication.notes,
       };
-      const result = await internshipService.updateInternship(id, payload);
+
+      const result = await internshipService.updateInternship(
+        id,
+        payload
+      );
+
       if (result?.data) {
         setApplications((prev) =>
-          prev.map((app) => ((app.id || app._id) === id ? result.data : app))
+          prev.map((app) =>
+            String(app.id || app._id) === String(id)
+              ? result.data
+              : app
+          )
         );
+
         return;
       }
     } catch (err) {
       console.warn("Update application error:", err);
     }
+
     setApplications((prev) =>
-      prev.map((app) => ((app.id || app._id) === id ? updatedApplication : app))
+      prev.map((app) =>
+        String(app.id || app._id) === String(id)
+          ? updatedApplication
+          : app
+      )
     );
   };
 
@@ -189,7 +292,12 @@ const Applications = () => {
     } catch (err) {
       console.warn("Delete application error:", err);
     }
-    setApplications((prev) => prev.filter((app) => (app.id || app._id) !== id));
+
+    setApplications((prev) =>
+      prev.filter(
+        (app) => String(app.id || app._id) !== String(id)
+      )
+    );
   };
 
   const openEditModal = (application) => {
@@ -202,7 +310,10 @@ const Applications = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const isFiltered = searchQuery.trim() !== "" || statusFilter !== "All" || modeFilter !== "All";
+  const isFiltered =
+    searchQuery.trim() !== "" ||
+    statusFilter !== "All" ||
+    modeFilter !== "All";
 
   return (
     <div className="min-h-full">
@@ -213,10 +324,12 @@ const Applications = () => {
             <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               <Briefcase className="w-4.5 h-4.5" />
             </div>
+
             <h1 className="text-xl font-bold text-slate-800 dark:text-white sm:text-2xl">
               Applications
             </h1>
           </div>
+
           <p className="text-sm text-slate-500 dark:text-slate-400 ml-[46px]">
             Track and manage all your internship applications in one place.
           </p>
@@ -234,7 +347,11 @@ const Applications = () => {
 
       {/* Toolbar: Search + Filters */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-6">
-        <SearchBar value={searchQuery} onChange={handleFilterChange(setSearchQuery)} />
+        <SearchBar
+          value={searchQuery}
+          onChange={handleFilterChange(setSearchQuery)}
+        />
+
         <FilterBar
           statusFilter={statusFilter}
           onStatusChange={handleFilterChange(setStatusFilter)}
@@ -247,41 +364,43 @@ const Applications = () => {
 
       {/* Content Area */}
       {loading ? (
-        <LoadingSpinner label="Fetching applications..." />
-      ) : paginatedApplications.length > 0 ? (
-        <>
-          <ApplicationTable
-            applications={paginatedApplications}
-            onEdit={openEditModal}
-            onDelete={openDeleteModal}
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:hidden gap-4">
-            {paginatedApplications.map((app) => (
-              <ApplicationCard
-                key={app.id || app._id}
-                application={app}
-                onEdit={openEditModal}
-                onDelete={openDeleteModal}
-              />
-            ))}
-          </div>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            totalItems={filteredApplications.length}
-            itemsPerPage={ITEMS_PER_PAGE}
-          />
-        </>
-      ) : (
-        <EmptyState
-          isFiltered={isFiltered}
-          onAddClick={() => setIsAddModalOpen(true)}
-          onClearFilters={handleClearFilters}
+  <LoadingSpinner label="Fetching applications..." />
+) : error ? (
+  <div className="text-red-600 p-4" role="alert">
+    {error.message || "Failed to load applications."}
+  </div>
+) : paginatedApplications.length > 0 ? (
+  <>
+    <ApplicationTable
+      applications={paginatedApplications}
+      onEdit={openEditModal}
+      onDelete={openDeleteModal}
+    />
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:hidden gap-4">
+      {paginatedApplications.map((app) => (
+        <ApplicationCard
+          key={app.id || app._id}
+          application={app}
+          onEdit={openEditModal}
+          onDelete={openDeleteModal}
         />
-      )}
+      ))}
+    </div>
+    <Pagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={setCurrentPage}
+      totalItems={filteredApplications.length}
+      itemsPerPage={ITEMS_PER_PAGE}
+    />
+  </>
+) : (
+  <EmptyState
+    isFiltered={isFiltered}
+    onAddClick={() => setIsAddModalOpen(true)}
+    onClearFilters={handleClearFilters}
+  />
+)}
 
       {/* Modals */}
       <AddApplicationModal
